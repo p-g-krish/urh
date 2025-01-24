@@ -10,7 +10,7 @@ TIMEOUT = 0.2
 cdef object f
 cdef int RUNNING = 0
 
-cdef int _c_callback_recv(chackrf.hackrf_transfer*transfer)  with gil:
+cdef int _c_callback_recv(chackrf.hackrf_transfer*transfer) noexcept with gil:
     global f, RUNNING
     try:
         (<object> f)(transfer.buffer[0:transfer.valid_length])
@@ -19,7 +19,7 @@ cdef int _c_callback_recv(chackrf.hackrf_transfer*transfer)  with gil:
         logger.error("Cython-HackRF:" + str(e))
         return -1
 
-cdef int _c_callback_send(chackrf.hackrf_transfer*transfer)  with gil:
+cdef int _c_callback_send(chackrf.hackrf_transfer*transfer) noexcept with gil:
     global f, RUNNING
     # tostring() is a compatibility (numpy<1.9) alias for tobytes(). Despite its name it returns bytes not strings.
     cdef unsigned int i
@@ -113,7 +113,6 @@ cpdef int stop_tx_mode():
     return chackrf.hackrf_stop_tx(_c_device)
 
 cpdef int set_freq(freq_hz):
-    time.sleep(TIMEOUT)
     return chackrf.hackrf_set_freq(_c_device, freq_hz)
 
 cpdef is_streaming():
@@ -125,7 +124,6 @@ cpdef is_streaming():
         return False
 
 cpdef int set_amp_enable(value):
-    time.sleep(TIMEOUT)
     cdef uint8_t val = 1 if value else 0
     return chackrf.hackrf_set_amp_enable(_c_device, val)
 
@@ -135,28 +133,22 @@ cpdef int set_rf_gain(value):
 
 cpdef int set_if_rx_gain(value):
     """ Sets the LNA gain, in 8Db steps, maximum value of 40 """
-    time.sleep(TIMEOUT)
     return chackrf.hackrf_set_lna_gain(_c_device, value)
 
 cpdef int set_if_tx_gain(value):
     """ Sets the txvga gain, in 1db steps, maximum value of 47 """
-    time.sleep(TIMEOUT)
     return chackrf.hackrf_set_txvga_gain(_c_device, value)
 
 cpdef int set_baseband_gain(value):
     """ Sets the vga gain, in 2db steps, maximum value of 62 """
-    time.sleep(TIMEOUT)
     return chackrf.hackrf_set_vga_gain(_c_device, value)
 
 cpdef int set_sample_rate(sample_rate):
-    time.sleep(TIMEOUT)
     return chackrf.hackrf_set_sample_rate(_c_device, sample_rate)
 
 cpdef int set_bias_tee(on_or_off):
-    time.sleep(TIMEOUT)
     cdef uint8_t bias_tee = 1 if on_or_off else 0
     return chackrf.hackrf_set_antenna_enable(_c_device, bias_tee)
 
 cpdef int set_baseband_filter_bandwidth(bandwidth_hz):
-    time.sleep(TIMEOUT)
     return chackrf.hackrf_set_baseband_filter_bandwidth(_c_device, bandwidth_hz)
